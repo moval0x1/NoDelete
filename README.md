@@ -1,5 +1,5 @@
 # NoDelete
-NoDelete is a tool that assists in the malware analysis process by collecting files that malware drops in a folder and deletes afterward.
+NoDelete is a tool that assists in malware analysis by locking a folder where malware drops files before deleting them.
 
 ## Note
 > This project is being created mainly for my personal studies of Qt and C++. As soon as I learn new things, I will improve it all.
