@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "WindowsManagement.h"
-#include "./ui_mainwindow.h"
+#include "ui_mainwindow.h"
 
 #include <QFileDialog>
 #include <QtGui>
@@ -21,7 +21,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_btnOpenFolder_clicked()
 {
-
     QString initialDir = QDir::toNativeSeparators(QDir::currentPath());
     QString selectedDir = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this, "Open Directory", initialDir, QFileDialog::ShowDirsOnly));
 
