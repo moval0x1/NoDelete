@@ -6,12 +6,7 @@ NoDelete is a tool that assists in the malware analysis process by collecting fi
 
 If you have any suggestions, feel free to contact me.
 
-## Work In Progress
-![ClearAllPermissions](/imgs/NoDelete-ClearAllPermissions.png)
+## Let's work!
+![NoDelete-Done](/imgs/NoDelete-Done.png)
 
-### TODO
-- Functions which needed to be polished:
-    - ListUsersAndPermissions
-    - ModifyPermissions
-- Add validation
-- Improve the GUI
+After using **NoDelete**, all the files inside a folder cannot be deleted. It allows you to Lock a specific folder used by malware to drop files, and you will be sure that the files will not be deleted after a while. This allows you to investigate each one of them.

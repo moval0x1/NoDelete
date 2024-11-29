@@ -11,6 +11,18 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->txtUser->setText("Everyone");
+
+    // Remove the maximize button
+    this->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
+
+    // Set fixed width and height
+    this->setFixedSize(612, 181);
+
+    this->setWindowIcon(QIcon(":/resources/NoDelete.png"));
+
+    this->ui->lblByMoval0x1->setText("<a href='https://github.com/moval0x1'>by moval0x1</a>");
+    this->ui->lblByMoval0x1->setOpenExternalLinks(true); // Enables opening links in the browser
+
 }
 
 MainWindow::~MainWindow()
@@ -25,8 +37,6 @@ void MainWindow::on_btnOpenFolder_clicked()
     QString selectedDir = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this, "Open Directory", initialDir, QFileDialog::ShowDirsOnly));
 
     if (!selectedDir.isEmpty()) {
-        // Process the selected directory
-        // qDebug() << "Selected directory: " << selectedDir;
         this->ui->txtFolderPath->setText(selectedDir);
     }
 }
@@ -34,11 +44,18 @@ void MainWindow::on_btnOpenFolder_clicked()
 
 void MainWindow::on_btnLockFolder_clicked()
 {
-    QString folderPath = this->ui->txtFolderPath->text();
-    QString userName = this->ui->txtUser->text();
+    if(this->ui->txtFolderPath->text() != "" && this->ui->txtUser->text() != ""){
 
-    ClearAllPermissions(this->ui->lblMsg, folderPath.toStdWString());
-    //ListUsersAndPermissions(this->ui, folderPath.toStdWString());
-    //ModifyPermissions(this->ui, folderPath.toStdWString(), userName.toStdWString());
+        QString folderPath = this->ui->txtFolderPath->text();
+        QString userName = this->ui->txtUser->text();
+
+        WindowsManagement::ClearAllPermissions(this->ui->lblMsg, folderPath.toStdWString());
+        WindowsManagement::ListUsersAndPermissions(this->ui->lblMsg, folderPath.toStdWString());
+        WindowsManagement::ModifyPermissions(this->ui->lblMsg, folderPath.toStdWString(), userName.toStdWString());
+    }
+    else{
+        this->ui->lblMsg->setText("It would be best if you filled the fields correctly.");
+        this->ui->lblMsg->setStyleSheet("QLabel { color : red; }");
+    }
 }
 

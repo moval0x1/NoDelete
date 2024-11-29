@@ -29,6 +29,8 @@ set(SOURCES
 
 set(UIS
     src/ui/mainwindow.ui
+    src/ui/res.qrc
+    src/ui/app_icon.rc
 )
 
 set(CMAKE_AUTOUIC_SEARCH_PATHS

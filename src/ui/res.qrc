@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/resources">
+        <file>NoDelete.png</file>
+    </qresource>
+</RCC>
