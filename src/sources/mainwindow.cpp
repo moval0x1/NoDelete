@@ -61,7 +61,7 @@ void MainWindow::on_btnLockFolder_clicked()
 
 bool MainWindow::LockFolderCLI(const QString &folderPath, const QString &userName) {
 
-    if (folderPath.isEmpty() || userName.isEmpty()) {
+    if (folderPath.isEmpty()) {
         return false;
     }
 
