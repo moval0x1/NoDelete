@@ -62,12 +62,14 @@ void MainWindow::on_btnLockFolder_clicked()
 bool MainWindow::LockFolderCLI(const QString &folderPath, const QString &userName) {
 
     if (folderPath.isEmpty()) {
+        qWarning() << "\tUsage: NoDelete.exe --cli --path 'FolderPath' --user 'UserName'\n"
+                      "\tIf no user was passed, NoDelete assumes 'Everyone' as the default user.";
         return false;
     }
 
     WindowsManagement::ClearAllPermissions(this->ui->lblMsg, folderPath.toStdWString());
     WindowsManagement::ListUsersAndPermissions(this->ui->lblMsg, folderPath.toStdWString());
-    WindowsManagement::ModifyPermissions(this->ui->lblMsg, folderPath.toStdWString(), userName.toStdWString());
+    WindowsManagement::ModifyPermissions(this->ui->lblMsg, folderPath.toStdWString(), userName.isEmpty() ? L"Everyone" : userName.toStdWString());
 
     return true;
 }

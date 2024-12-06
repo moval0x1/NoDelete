@@ -16,7 +16,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    bool LockFolderCLI(const QString &folderPath, const QString &username = "Everyone");
+    bool LockFolderCLI(const QString &folderPath, const QString &username);
 
 private slots:
     void on_btnOpenFolder_clicked();
