@@ -15,16 +15,21 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 # Include headers directory
 include_directories(${CMAKE_SOURCE_DIR}/src/headers)
 
+# Include the manifest file
+set(MANIFEST_FILE "${CMAKE_CURRENT_SOURCE_DIR}/app.manifest")
+
 # Organize files into specific folders
 set(HEADERS
     src/headers/mainwindow.h
-    src/headers/WindowsManagement.h
+    src/headers/windowsManagement.h
+    src/headers/util.h
 )
 
 set(SOURCES
     src/sources/main.cpp
     src/sources/mainwindow.cpp
-    src/sources/WindowsManagement.cpp
+    src/sources/windowsManagement.cpp
+    src/sources/util.cpp
 )
 
 set(UIS
@@ -37,31 +42,32 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS
     ${CMAKE_SOURCE_DIR}/src/ui
 )
 
-qt_add_executable(NoDelete
-    MANUAL_FINALIZATION
+# Add executable
+add_executable(NoDelete
     ${HEADERS}
     ${SOURCES}
     ${UIS}
+    ${MANIFEST_FILE}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(NoDelete)
 endif()
 
+# Link Qt libraries
 target_link_libraries(NoDelete PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.NoDelete)
-endif()
+# Set application properties
 set_target_properties(NoDelete PROPERTIES
-    ${BUNDLE_ID_OPTION}
+    MACOSX_BUNDLE_GUI_IDENTIFIER "com.example.NoDelete"
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
+    LINK_FLAGS "/MANIFESTUAC:NO"  # Disable automatic manifest to avoid conflicts
 )
 
+# Installation rules
 include(GNUInstallDirs)
 install(TARGETS NoDelete
     BUNDLE DESTINATION .
