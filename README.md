@@ -15,6 +15,7 @@ If you have any suggestions, feel free to contact me.
 - Implemented multi-threading
 - Added functionality to restore original folder permissions
 - Read from environment variable
+- Added ``app.manifest``
 
 ### How it looks like now?
 Now you can set the folder you would like to lock in a **``config.ini``** file.
