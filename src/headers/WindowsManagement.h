@@ -18,6 +18,7 @@
 #include <QProcessEnvironment>
 #include <Qpoint>
 #include <QMenu>
+#include <QProcess>
 
 
 class WindowsManagement {  
@@ -29,9 +30,9 @@ public:
     static std::vector<std::string> LoadDirectoriesFromIni(QLabel* lblMsg, const QString &filePath, const std::string &sectionName);
     static void AddItemsToList(QListView* lstDirectories, std::vector<std::string> &lst);
     static void ClearAllPermissions(QLabel* lblMsg, const std::wstring& folderPath);
-    static bool ModifyPermissions(QLabel* lblMsg, const std::wstring& folderPath);
+    static bool ModifyFoldersPermissions(QLabel* lblMsg, const std::wstring& folderPath);
 
-    void WatchDirectory(const std::wstring& directory);
+    void WatchDirectoryAsync(const std::wstring& directory);
     static bool SaveOriginalPermissions(QLabel* lblMsg, const std::wstring& folderPath);
     static bool SetNoDeletePermissions(QLabel* lblMsg, const std::wstring& folderPath);
     static void RestoreOriginalPermissions(QLabel* lblMsg);
@@ -43,10 +44,11 @@ public:
 private:
     std::atomic<bool>& running;
     static QString ExpandEnvironmentVariables(const QString &path);
-    static void LogEvent(const std::wstring& message);
 
     static DWORD GetSecurityDescriptor(const std::wstring& folderPath, PSECURITY_DESCRIPTOR& pSD, PACL& pOldDACL);
     static DWORD SetCustomDACL(const std::wstring& folderPath, PACL pNewDACL = nullptr);
+
+    void WatchDirectory(const std::wstring& directory);
 
 };
 

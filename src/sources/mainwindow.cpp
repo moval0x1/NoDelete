@@ -5,7 +5,9 @@
 
 std::atomic<bool> running(false);
 std::vector<std::jthread> threads;
+QString binaryPath;
 std::vector<std::string> directories;
+std::vector<std::string> permissions;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -25,8 +27,10 @@ MainWindow::MainWindow(QWidget *parent)
     this->ui->lblByMoval0x1->setOpenExternalLinks(true); // Enables opening links in the browser
 
     // Locate the .ini file in the executable directory
-    QString iniFilePath = QCoreApplication::applicationDirPath() + Util::CONFIG_PATH;
+    binaryPath = QCoreApplication::applicationDirPath();
+    QString iniFilePath = binaryPath + Util::CONFIG_PATH;
     directories = WindowsManagement::LoadDirectoriesFromIni(this->ui->lblMsg, iniFilePath, "Directories");
+    permissions = WindowsManagement::LoadDirectoriesFromIni(this->ui->lblMsg, iniFilePath, "Permissions");
 
     if(!directories.empty()){
         WindowsManagement::AddItemsToList(this->ui->lstDirectories, directories);
@@ -39,11 +43,17 @@ MainWindow::MainWindow(QWidget *parent)
             this, [=](const QPoint &pos) { WindowsManagement::ShowContextMenu(this->ui->lstDirectories, pos); });
 
 
+    Util::setMessage(this->ui->lblMsg, QString::fromStdString("[ NoDelete was started! \\o/]"), "black");
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    wm->RestoreOriginalPermissions(this->ui->lblMsg);
+    delete wm;
+    wm = nullptr;  // Prevent further access
+
 }
 
 void MainWindow::on_btnRun_clicked()
@@ -53,18 +63,17 @@ void MainWindow::on_btnRun_clicked()
 
     wm = new WindowsManagement(running);
 
-    Util::setMessage(this->ui->lblMsg, QString::number(this->ui->lstDirectories->model()->rowCount()), "black");
     if(this->ui->lstDirectories->model()->rowCount() > 0){
 
         for (const auto& folder : directories) {
             if (!wm->SaveOriginalPermissions(this->ui->lblMsg, Util::stringToWString(folder))) {
-                Util::setMessage(this->ui->lblMsg, QString::fromStdString("Skipping folder due to failure.") + QString::fromStdString(folder), "red");
+                Util::setMessage(this->ui->lblMsg, QString::fromStdString("Skipping folder due to failure: %1").arg(QString::fromStdString(folder)), "red");
                 std::this_thread::sleep_for(std::chrono::seconds(2));
                 continue;
             }
 
             wm->ClearAllPermissions(this->ui->lblMsg, Util::stringToWString(folder));
-            wm->ModifyPermissions(this->ui->lblMsg, Util::stringToWString(folder));
+            wm->ModifyFoldersPermissions(this->ui->lblMsg, Util::stringToWString(folder));
         }
 
         if (running.load()) {
@@ -79,7 +88,7 @@ void MainWindow::on_btnRun_clicked()
 
             // Launch threads
             threads.emplace_back([this, wDir]() {
-                wm->WatchDirectory(wDir);
+                wm->WatchDirectoryAsync(wDir);
             });
         }
 
@@ -93,6 +102,8 @@ void MainWindow::on_btnStop_clicked()
 {
     this->ui->btnStop->setEnabled(false);
     this->ui->btnRun->setEnabled(true);
+
+    wm = new WindowsManagement(running);
 
     if (!running.load()) {
         Util::setMessage(this->ui->lblMsg, "Not running!", "red");
@@ -109,9 +120,10 @@ void MainWindow::on_btnStop_clicked()
     }
 
     threads.clear();  // Clear the thread list
-    delete wm;  // Clean up
-    wm = nullptr;
 
-    WindowsManagement::RestoreOriginalPermissions(this->ui->lblMsg);
+    wm->RestoreOriginalPermissions(this->ui->lblMsg);
+    delete wm;
+    wm = nullptr;  // Prevent further access
+
     Util::setMessage(this->ui->lblMsg, "Folders unlocked!", "green");
 }
