@@ -16,6 +16,8 @@
 #include <QString>
 #include <QSettings>
 #include <QProcessEnvironment>
+#include <Qpoint>
+#include <QMenu>
 
 
 class WindowsManagement {  
@@ -33,6 +35,8 @@ public:
     static bool SaveOriginalPermissions(QLabel* lblMsg, const std::wstring& folderPath);
     static bool SetNoDeletePermissions(QLabel* lblMsg, const std::wstring& folderPath);
     static void RestoreOriginalPermissions(QLabel* lblMsg);
+
+    static void ShowContextMenu(QListView* lstDirectories, const QPoint &pos);
 
     std::wstring stringToWString(const std::string& str);
 

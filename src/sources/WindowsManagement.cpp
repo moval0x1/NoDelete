@@ -36,22 +36,27 @@ std::vector<std::string> WindowsManagement::LoadDirectoriesFromIni(QLabel* lblMs
     std::vector<std::string> lst;
 
     if (!QFileInfo::exists(filePath)) {
-        Util::setMessage(lblMsg, "INI file not found:" + filePath, "red");
+        Util::setMessage(lblMsg, "INI file not found: " + filePath, "red");
         return lst;
     }
 
     QSettings settings(filePath, QSettings::IniFormat);
-
-    settings.beginGroup(sectionName);
+    settings.beginGroup(QString::fromStdString(sectionName));
     QStringList keys = settings.childKeys();
 
+    QRegularExpression dirPattern(R"(^[A-Z]:\\(?:[^\\/:*?"<>|]+\\)*$)");
+    QRegularExpression logPattern(R"(^[^\\/:*?"<>|]+\.txt$)");
+
     for (const QString &key : keys) {
-        QString directoryName = settings.value(key).toString();
-        QString expandedDir = WindowsManagement::ExpandEnvironmentVariables(directoryName);
+        QString value = settings.value(key).toString();
+        QString expandedValue = WindowsManagement::ExpandEnvironmentVariables(value);
 
-        if (!expandedDir.isEmpty()) {
-
-            lst.push_back(expandedDir.toStdString());
+        if (sectionName == "Directories" && dirPattern.match(expandedValue).hasMatch()) {
+            lst.push_back(expandedValue.toStdString());
+        } else if (sectionName == "LogFile" && logPattern.match(expandedValue).hasMatch()) {
+            lst.push_back(expandedValue.toStdString());
+        } else {
+            Util::setMessage(lblMsg, "Invalid format in section " + QString::fromStdString(sectionName) + ": " + value, "red");
         }
     }
     settings.endGroup();
@@ -68,7 +73,7 @@ void  WindowsManagement::AddItemsToList(QListView* lstDirectories, std::vector<s
 
     for(const std::string &v : lst){
         // Create a new item and set its text
-        QStandardItem *item = new QStandardItem(QString::fromStdString(v));
+        QStandardItem *item = new QStandardItem(QIcon(":/resources/folder.png"), QString::fromStdString(v));
 
         // Add the item to the model
         model->appendRow(item);
@@ -78,7 +83,7 @@ void  WindowsManagement::AddItemsToList(QListView* lstDirectories, std::vector<s
 
 void WindowsManagement::LogEvent(const std::wstring& message) {
 
-    QString iniFilePath = QCoreApplication::applicationDirPath() + "/Directories.ini";
+    QString iniFilePath = QCoreApplication::applicationDirPath() + Util::CONFIG_PATH;
     std::string logFileName = WindowsManagement::LoadDirectoriesFromIni(NULL, iniFilePath, "LogFile")[0];
 
     std::lock_guard<std::mutex> lock(logMutex);
@@ -128,7 +133,9 @@ void WindowsManagement::WatchDirectory(const std::wstring &directory)
                 buffer,
                 bufferLength,
                 TRUE,  // Watch subdirectories
-                FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_CREATION,
+                FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
+                    FILE_NOTIFY_CHANGE_CREATION | FILE_NOTIFY_CHANGE_LAST_WRITE |
+                    FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE,
                 NULL,
                 &overlapped,
                 NULL)) {
@@ -137,9 +144,11 @@ void WindowsManagement::WatchDirectory(const std::wstring &directory)
         }
 
         DWORD waitStatus = WaitForSingleObject(overlapped.hEvent, 500);  // Timeout after 500ms
-        if (waitStatus == WAIT_OBJECT_0 && GetOverlappedResult(hDir, &overlapped, &bytesReturned, FALSE)) {
-            FILE_NOTIFY_INFORMATION* fni = (FILE_NOTIFY_INFORMATION*)buffer;
+        if (waitStatus == WAIT_OBJECT_0 && GetOverlappedResult(hDir, &overlapped, &bytesReturned, TRUE)) {
+            if (bytesReturned == 0)
+                continue;
 
+            FILE_NOTIFY_INFORMATION* fni = (FILE_NOTIFY_INFORMATION*)buffer;
             do {
                 std::wstring fileName(fni->FileName, fni->FileNameLength / sizeof(WCHAR));
                 switch (fni->Action) {
@@ -152,12 +161,26 @@ void WindowsManagement::WatchDirectory(const std::wstring &directory)
                     std::wcout << L"[MONITOR] File deleted in " << directory << L": " << fileName << std::endl;
                     LogEvent(L"[MONITOR] File deleted in " + directory + L": " + fileName);
                     break;
+
+                case FILE_ACTION_MODIFIED:
+                    std::wcout << L"[MONITOR] File modified in " << directory << L": " << fileName << std::endl;
+                    LogEvent(L"[MONITOR] File modified in " + directory + L": " + fileName);
+                    break;
+
+                case FILE_ACTION_RENAMED_OLD_NAME:
+                    std::wcout << L"[MONITOR] File renamed from " << fileName << std::endl;
+                    LogEvent(L"[MONITOR] File renamed from " + fileName);
+                    break;
+
+                case FILE_ACTION_RENAMED_NEW_NAME:
+                    std::wcout << L"[MONITOR] File renamed to " << fileName << std::endl;
+                    LogEvent(L"[MONITOR] File renamed to " + fileName);
+                    break;
                 }
                 fni = (FILE_NOTIFY_INFORMATION*)((LPBYTE)fni + fni->NextEntryOffset);
             } while (fni->NextEntryOffset != 0);
         } else if (waitStatus == WAIT_TIMEOUT) {
-            // Allow thread to periodically check running state
-            continue;
+            continue; // Allow periodic running state check
         }
     }
 
@@ -244,6 +267,22 @@ void WindowsManagement::RestoreOriginalPermissions(QLabel* lblMsg)
                 Util::setMessage(lblMsg, "Restored permissions.", "blue");
             }
         }
+    }
+}
+
+void WindowsManagement::ShowContextMenu(QListView* lstDirectories, const QPoint &pos)
+{
+    QModelIndex index = lstDirectories->indexAt(pos);
+    if (!index.isValid()) return;
+
+    QMenu contextMenu;
+    QAction *openDirAction = contextMenu.addAction("Open Directory");
+
+    // Execute the menu and check the selected action
+    QAction *selectedAction = contextMenu.exec(lstDirectories->viewport()->mapToGlobal(pos));
+    if (selectedAction == openDirAction) {
+        QString itemText = index.data(Qt::DisplayRole).toString();
+        QDesktopServices::openUrl(QUrl::fromLocalFile(itemText));
     }
 }
 

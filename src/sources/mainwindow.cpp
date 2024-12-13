@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->ui->lblByMoval0x1->setOpenExternalLinks(true); // Enables opening links in the browser
 
     // Locate the .ini file in the executable directory
-    QString iniFilePath = QCoreApplication::applicationDirPath() + "/Directories.ini";
+    QString iniFilePath = QCoreApplication::applicationDirPath() + Util::CONFIG_PATH;
     directories = WindowsManagement::LoadDirectoriesFromIni(this->ui->lblMsg, iniFilePath, "Directories");
 
     if(!directories.empty()){
@@ -33,6 +33,11 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     this->ui->btnStop->setEnabled(false);
+    this->ui->lstDirectories->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(this->ui->lstDirectories, &QListView::customContextMenuRequested,
+            this, [=](const QPoint &pos) { WindowsManagement::ShowContextMenu(this->ui->lstDirectories, pos); });
+
 
 }
 
@@ -61,7 +66,6 @@ void MainWindow::on_btnRun_clicked()
             wm->ClearAllPermissions(this->ui->lblMsg, Util::stringToWString(folder));
             wm->ModifyPermissions(this->ui->lblMsg, Util::stringToWString(folder));
         }
-
 
         if (running.load()) {
             Util::setMessage(this->ui->lblMsg, "Already running!", "red");
@@ -109,5 +113,5 @@ void MainWindow::on_btnStop_clicked()
     wm = nullptr;
 
     WindowsManagement::RestoreOriginalPermissions(this->ui->lblMsg);
-    Util::setMessage(this->ui->lblMsg, "Folders unlocked!", "purple");
+    Util::setMessage(this->ui->lblMsg, "Folders unlocked!", "green");
 }

@@ -90,7 +90,7 @@
      </font>
     </property>
     <property name="title">
-     <string>Directories</string>
+     <string>Monitoring Directories</string>
     </property>
     <widget class="QListView" name="lstDirectories">
      <property name="enabled">
