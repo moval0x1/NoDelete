@@ -18,13 +18,16 @@ include_directories(${CMAKE_SOURCE_DIR}/src/headers)
 # Organize files into specific folders
 set(HEADERS
     src/headers/mainwindow.h
-    src/headers/WindowsManagement.h
+    src/headers/windowsManagement.h
+    src/headers/util.h
+
 )
 
 set(SOURCES
     src/sources/main.cpp
     src/sources/mainwindow.cpp
-    src/sources/WindowsManagement.cpp
+    src/sources/windowsManagement.cpp
+    src/sources/util.cpp
 )
 
 set(UIS
