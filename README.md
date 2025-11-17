@@ -1,6 +1,12 @@
 # NoDelete
 NoDelete is a tool that assists in malware analysis by locking a folder where malware drops files before deleting them.
 
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/moval0x1/NoDelete)
+[![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://www.microsoft.com/windows)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![GitHub all releases](https://img.shields.io/github/downloads/moval0x1/NoDelete/total)
+![GitHub release downloads](https://img.shields.io/github/downloads/moval0x1/NoDelete/latest/total)
+
 ## Note
 > This project is being created mainly for my personal studies of Qt and C++. As soon as I learn new things, I will improve it all.
 
